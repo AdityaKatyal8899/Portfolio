@@ -185,22 +185,13 @@ if (navMenu){
   });
 }
 
-// EmailJS integration for Contact form
+// Contact form submission (client-only via mailto, no backend)
 (function(){
   const form = document.querySelector('form[name="contact"]');
   const msgBox = document.getElementById('contactMsg');
   const sendBtn = form ? form.querySelector('button[type="submit"]') : null;
 
   if(!form || !msgBox) return;
-
-  // Initialize EmailJS (placeholders below)
-  // Replace with your real Public Key from EmailJS dashboard
-  const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-  const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-  if(window.emailjs && EMAILJS_PUBLIC_KEY){
-    try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(err) { /* no-op */ }
-  }
 
   function renderSuccess(message){
     msgBox.innerHTML = `
@@ -230,20 +221,37 @@ if (navMenu){
 
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
-    if(!window.emailjs){ renderError('Email service not available. Please try again later.'); return; }
+    // Collect and validate inputs
+    const name = (form.name?.value || '').trim();
+    const email = (form.email?.value || '').trim();
+    const message = (form.message?.value || '').trim();
+    if(!name || !email || !message){
+      renderError('All fields (name, email, message) are required.');
+      return;
+    }
 
     // animate button and disable during send
     if (sendBtn){ sendBtn.disabled = true; sendBtn.dataset.originalText = sendBtn.textContent; sendBtn.textContent = 'Sending...'; }
 
     try{
-      await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, form);
-      renderSuccess('Message sent successfully!');
+      const to = (form.querySelector('input[name="to_email"]')?.value || '').trim();
+      const subject = (form.querySelector('input[name="subject"]')?.value || 'New message from Portfolio').trim();
+      const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+
+      const mailto = new URL('mailto:' + encodeURIComponent(to || ''));
+      mailto.searchParams.set('subject', subject);
+      mailto.searchParams.set('body', body);
+
+      // Open default mail client
+      window.location.href = mailto.toString();
+      renderSuccess('Opening your email client to send the message...');
       form.reset();
     } catch(err){
-      console.error('EmailJS error:', err);
-      renderError('Failed to send. Please try again.');
+      console.error('Mailto error:', err);
+      renderError('Could not open your email client. Please send an email manually.');
     } finally {
       if (sendBtn){ sendBtn.disabled = false; sendBtn.textContent = sendBtn.dataset.originalText || 'Send'; }
     }
   });
 })();
+
