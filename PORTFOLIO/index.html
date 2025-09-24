@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&family=Work+Sans:wght@300;400;500;600;700&family=Funnel+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="otaku">
+<body class="calm">
   <a class="skip-link" href="#about">Skip to content</a>
   <header class="nav" role="navigation" aria-label="Main">
     <div class="nav-inner">
@@ -22,6 +22,12 @@
         <a href="#achievements">Achievements</a>
         <a href="#contact">Contact</a>
       </nav>
+      <!-- Mode toggle: Normal | Calm -->
+      <div class="mode-toggle" id="modeSwitch" role="switch" aria-checked="false" aria-label="Toggle Calm mode" tabindex="0" style="margin-left:auto">
+        <span class="mode-label">Normal</span>
+        <div class="switch" aria-hidden="true"><div class="knob"></div></div>
+        <span class="mode-label">Calm</span>
+      </div>
       
       <!-- New mobile hamburger at far right -->
       <label class="hamburger" id="hamburger" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded="false">
@@ -35,6 +41,7 @@
   </header>
   <!-- Blur overlay (starts visible, hides after load) -->
   <div id="overlay" class="show" aria-hidden="true"></div>
+
 
   <!-- AI Matrix Loader (hidden by default; shown on mode switch) -->
   <div id="matrixLoader" class="ai-matrix-loader" aria-hidden="true" style="display:none">
@@ -82,7 +89,7 @@
           <div>
             <h2 class="section-title">About</h2>
             <p class="about-intro">Hi, I’m Aditya — a Full‑Stack Developer, a Machine Learning Engineer and a Tech Enthusiast. I like to blend my ideas into realworld working applications through my developement skills</p>
-            <p>I am an Indian and I belong to Uttar Pradesh. I am currently pursuing my Bachelors of Technology in Computer Science from <a href="https://aktu.ac.in/" target="_blank" rel="noopener noreferrer">AKTU</a>, I look forward to my professional life and enhancements towards tech as the time goes on.</p>
+            <p>I am an Indian and I belong to Uttar Pradesh. I am currently pursuing my Bachelors in Computer Science from <a href="https://aktu.ac.in/" target="_blank" rel="noopener noreferrer">AKTU</a>, I look forward to my professional life and Enthusiasm towards tech as the time goes on.</p>
           </div>
           <div class="portrait">
             <img src="public/myself.png" alt="Aditya portrait" />
@@ -106,28 +113,28 @@
         <div class="skill">
           <h3>JavaScript</h3>
           <div class="bar" data-level="70" aria-label="JavaScript/TypeScript proficiency 70%" role="img"><div class="fill"></div></div>
-          <div class="rpg-label"><span>Level 68</span><span>More than average</span></div>
+          <div class="rpg-label"><span>Level 68</span></div>
         </div>
         <div class="skill">
           <h3>Python</h3>
           <div class="bar" data-level="72" aria-label="Python proficiency 72%" role="img"><div class="fill"></div></div>
-          <div class="rpg-label"><span>Level 72</span><span>Going good</span></div>
+          <div class="rpg-label"><span>Level 72</span></div>
         </div>
         <div class="skill">
           <h3>Node / APIs</h3>
           <div class="bar" data-level="74" aria-label="Node/APIs proficiency 74%" role="img"><div class="fill"></div></div>
-          <div class="rpg-label"><span>Level 74</span><span>Going good</span></div>
+          <div class="rpg-label"><span>Level 74</span></div>
         </div>
         <div class="skill">
           <h3>DSA</h3>
           <div class="bar" data-level="50" aria-label="DSA proficiency 50%" role="img"><div class="fill"></div></div>
-          <div class="rpg-label"><span>Level 50</span><span>Enough capable</span></div>
+          <div class="rpg-label"><span>Level 50</span></div>
         </div>
 
         <div class="skill">
           <h3>DataBases</h3>
           <div class="bar" data-level="78" aria-label="DSA proficiency 78%" role="img"><div class="fill"></div></div>
-          <div class="rpg-label"><span>Level 78</span><span>Going more than good</span></div>
+          <div class="rpg-label"><span>Level 78</span></div>
         </div>
       </div>
     </div>

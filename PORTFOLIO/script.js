@@ -1,4 +1,4 @@
- // Smooth scroll offset fix for fixed navbar
+// Smooth scroll offset fix for fixed navbar
 const navHeight = 64; // approx
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', (e) => {
@@ -11,33 +11,33 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-// Mode toggle (Pro vs Otaku)
+// Mode toggle (Normal vs Calm)
 const body = document.body;
 const switchEl = document.getElementById('modeSwitch');
 const loaderEl = document.getElementById('matrixLoader');
 const overlayEl = document.getElementById('overlay');
 function applyMode(mode){
-  if(mode === 'pro') { body.classList.remove('otaku'); body.classList.add('pro'); }
-  else { body.classList.remove('pro'); body.classList.add('otaku'); }
+  if(mode === 'normal') { body.classList.remove('calm'); body.classList.add('normal'); }
+  else { body.classList.remove('normal'); body.classList.add('calm'); }
   localStorage.setItem('mode', mode);
 }
-// Force Pro mode since the mode switch was removed
-const saved = 'pro'; // default to simpler look
+// Initialize mode: always Calm (mode switch removed)
+const saved = 'calm';
 applyMode(saved);
-if (switchEl) switchEl.setAttribute('aria-checked', saved === 'otaku');
+if (switchEl) switchEl.setAttribute('aria-checked', saved === 'calm');
 function toggleMode(){
-  const next = body.classList.contains('otaku') ? 'pro' : 'otaku';
+  const next = body.classList.contains('calm') ? 'normal' : 'calm';
   // Show loader for both directions
   if (overlayEl){ overlayEl.classList.add('show'); }
   if (loaderEl){ loaderEl.style.display = 'grid'; }
-  const toOtaku = (next === 'otaku');
-  disableOtakuEffects();
+  const toCalm = (next === 'calm');
+  disableCalmEffects();
   applyMode(next);
-  if (switchEl) switchEl.setAttribute('aria-checked', toOtaku);
+  if (switchEl) switchEl.setAttribute('aria-checked', toCalm);
   setTimeout(()=>{
     if (loaderEl){ loaderEl.style.display = 'none'; }
     if (overlayEl){ overlayEl.classList.remove('show'); }
-    if (toOtaku){ enableOtakuEffects(); }
+    if (toCalm){ enableCalmEffects(); }
   }, 2000);
 }
 if (switchEl){
@@ -45,7 +45,7 @@ if (switchEl){
   switchEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleMode(); } });
 }
 
-// Particles (Otaku only)
+// Particles (Calm only)
 const canvas = document.getElementById('particles');
 let ctx = null, particles = [], rafId = null;
 function initParticles(){
@@ -54,7 +54,7 @@ function initParticles(){
   resizeCanvas();
   particles = [];
   const colors = ['#f72585','#7209b7','#3f8efc'];
-  const count = 70;
+  const count = 80; // Increase this value for higher density
   for(let i=0;i<count;i++){
     particles.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:1+Math.random()*2, vx:(Math.random()-.5)*0.4, vy:(Math.random()-.5)*0.4, c: colors[(Math.random()*colors.length)|0] });
   }
@@ -62,7 +62,7 @@ function initParticles(){
   loopParticles();
 }
 function resizeCanvas(){ if(!canvas) return; canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
-window.addEventListener('resize', ()=>{ if(body.classList.contains('otaku')){ resizeCanvas(); } });
+window.addEventListener('resize', ()=>{ if(body.classList.contains('calm')){ resizeCanvas(); } });
 function loopParticles(){
   if(!ctx) return;
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -78,7 +78,7 @@ function loopParticles(){
 }
 function stopParticles(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } if(ctx){ ctx.clearRect(0,0,canvas.width,canvas.height); } }
 
-// Sakura petals (Otaku only)
+// Sakura petals (Calm only)
 const observer = new IntersectionObserver((entries)=>{
   entries.forEach(en=>{
     if(en.isIntersecting){
@@ -96,39 +96,23 @@ const observer = new IntersectionObserver((entries)=>{
 }, { threshold: 0.25 });
 document.querySelectorAll('.reveal').forEach(el=> observer.observe(el));
 
-// Otaku effects toggling
-let sakuraTimer = null;
-function enableOtakuEffects(){
+// Calm effects toggling (particles + parallax only)
+function enableCalmEffects(){
   // Particles
   initParticles();
-  // Sakura petals
-  const sakura = document.getElementById('sakura');
-  if(sakura){
-    if(sakuraTimer) clearInterval(sakuraTimer);
-    sakuraTimer = setInterval(()=>{
-      if(!body.classList.contains('otaku')) return;
-      const el = document.createElement('div'); el.className='petal';
-      el.style.left = Math.random()*100 + 'vw';
-      el.style.animationDuration = (6 + Math.random()*6) + 's';
-      el.style.opacity = (0.5 + Math.random()*0.5);
-      sakura.appendChild(el);
-      setTimeout(()=> el.remove(), 12000);
-    }, 700);
-  }
   // Parallax
   parallaxActive = true;
   updateParallax();
 }
-function disableOtakuEffects(){
+function disableCalmEffects(){
   stopParticles();
-  if(sakuraTimer){ clearInterval(sakuraTimer); sakuraTimer=null; }
   // Reset parallax transforms
   document.querySelectorAll('.parallax-bg, .parallax-fg').forEach(el=>{ el.style.transform = ''; });
   parallaxActive = false;
 }
 
-// Parallax scrolling (only in Otaku mode)
-let parallaxActive = body.classList.contains('otaku');
+// Parallax scrolling (only in Calm mode)
+let parallaxActive = body.classList.contains('calm');
 const sections = Array.from(document.querySelectorAll('section'));
 function updateParallax(){
   if(!parallaxActive) return;
@@ -154,7 +138,7 @@ window.addEventListener('load', ()=>{
   // Always show a short loader on initial load for consistency
   if (overlayEl){ overlayEl.classList.add('show'); }
   if (loaderEl){ loaderEl.style.display = 'grid'; }
-  if (saved === 'otaku') enableOtakuEffects();
+  if (saved === 'calm') enableCalmEffects();
   setTimeout(()=>{
     if (loaderEl){ loaderEl.style.display = 'none'; }
     if (overlayEl){ overlayEl.classList.remove('show'); }
