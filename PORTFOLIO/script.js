@@ -1,241 +1,233 @@
-// Smooth scroll offset fix for fixed navbar
-const navHeight = 64; // approx
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', (e) => {
-    const target = document.querySelector(a.getAttribute('href'));
-    if(target){
-      e.preventDefault();
-      const y = target.getBoundingClientRect().top + window.scrollY - (navHeight - 8);
-      window.scrollTo({ top: y, behavior: 'smooth' });
+document.addEventListener("DOMContentLoaded", () => {
+  // Theme toggle (Uiverse switch)
+  const rootEl = document.documentElement;
+  const toggleCheckbox = document.querySelector('.theme-toggle-wrap .input');
+  const applyTheme = (theme) => {
+    if (theme === 'dark') {
+      rootEl.classList.add('theme-dark');
+      if (toggleCheckbox) toggleCheckbox.checked = true;
+    } else {
+      rootEl.classList.remove('theme-dark');
+      if (toggleCheckbox) toggleCheckbox.checked = false;
     }
-  });
-});
-
-// Mode toggle (Normal vs Calm)
-const body = document.body;
-const switchEl = document.getElementById('modeSwitch');
-const loaderEl = document.getElementById('matrixLoader');
-const overlayEl = document.getElementById('overlay');
-function applyMode(mode){
-  if(mode === 'normal') { body.classList.remove('calm'); body.classList.add('normal'); }
-  else { body.classList.remove('normal'); body.classList.add('calm'); }
-  localStorage.setItem('mode', mode);
-}
-// Initialize mode: always Calm (mode switch removed)
-const saved = 'calm';
-applyMode(saved);
-if (switchEl) switchEl.setAttribute('aria-checked', saved === 'calm');
-function toggleMode(){
-  const next = body.classList.contains('calm') ? 'normal' : 'calm';
-  // Show loader for both directions
-  if (overlayEl){ overlayEl.classList.add('show'); }
-  if (loaderEl){ loaderEl.style.display = 'grid'; }
-  const toCalm = (next === 'calm');
-  disableCalmEffects();
-  applyMode(next);
-  if (switchEl) switchEl.setAttribute('aria-checked', toCalm);
-  setTimeout(()=>{
-    if (loaderEl){ loaderEl.style.display = 'none'; }
-    if (overlayEl){ overlayEl.classList.remove('show'); }
-    if (toCalm){ enableCalmEffects(); }
-  }, 2000);
-}
-if (switchEl){
-  switchEl.addEventListener('click', toggleMode);
-  switchEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleMode(); } });
-}
-
-// Particles (Calm only)
-const canvas = document.getElementById('particles');
-let ctx = null, particles = [], rafId = null;
-function initParticles(){
-  if(!canvas) return;
-  ctx = canvas.getContext('2d');
-  resizeCanvas();
-  particles = [];
-  const colors = ['#f72585','#7209b7','#3f8efc'];
-  const count = 80; // Increase this value for higher density
-  for(let i=0;i<count;i++){
-    particles.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:1+Math.random()*2, vx:(Math.random()-.5)*0.4, vy:(Math.random()-.5)*0.4, c: colors[(Math.random()*colors.length)|0] });
+  };
+  const saved = localStorage.getItem('theme') || 'light';
+  applyTheme(saved);
+  if (toggleCheckbox) {
+    toggleCheckbox.addEventListener('change', (e) => {
+      const wantDark = e.currentTarget.checked;
+      const mode = wantDark ? 'dark' : 'light';
+      localStorage.setItem('theme', mode);
+      applyTheme(mode);
+    });
   }
-  if(rafId) cancelAnimationFrame(rafId);
-  loopParticles();
-}
-function resizeCanvas(){ if(!canvas) return; canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
-window.addEventListener('resize', ()=>{ if(body.classList.contains('calm')){ resizeCanvas(); } });
-function loopParticles(){
-  if(!ctx) return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  particles.forEach(p=>{
-    p.x += p.vx; p.y += p.vy;
-    if(p.x<0) p.x = canvas.width; if(p.x>canvas.width) p.x = 0;
-    if(p.y<0) p.y = canvas.height; if(p.y>canvas.height) p.y = 0;
-    const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*5);
-    g.addColorStop(0,p.c); g.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-  });
-  rafId = requestAnimationFrame(loopParticles);
-}
-function stopParticles(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } if(ctx){ ctx.clearRect(0,0,canvas.width,canvas.height); } }
+  // Floating bar height sync
+  const floatingBar = document.querySelector(".floating-bar");
+  const root = document.documentElement;
 
-// Sakura petals (Calm only)
-const observer = new IntersectionObserver((entries)=>{
-  entries.forEach(en=>{
-    if(en.isIntersecting){
-      en.target.classList.add('show');
-      if(en.target.id === 'skillsWrap'){
-        en.target.querySelectorAll('.bar').forEach(b=>{
-          const lvl = b.getAttribute('data-level') || '70';
-          const fill = b.querySelector('.fill');
-          requestAnimationFrame(()=>{ fill.style.width = lvl + '%'; });
+  const setBarHeightVar = () => {
+    if (!floatingBar) return;
+    const h = floatingBar.offsetHeight || 64;
+    root.style.setProperty("--floating-bar-height", `${h}px`);
+  };
+
+  // Observe size changes of the floating bar (wrapping on small screens, font load, etc.)
+  if (window.ResizeObserver && floatingBar) {
+    const ro = new ResizeObserver(setBarHeightVar);
+    ro.observe(floatingBar);
+  }
+
+  // Update on viewport resize/orientation change
+  window.addEventListener("resize", setBarHeightVar, { passive: true });
+  window.addEventListener("orientationchange", setBarHeightVar);
+
+  // Initial set after fonts/styles applied
+  requestAnimationFrame(setBarHeightVar);
+  window.addEventListener("load", setBarHeightVar);
+
+  // Flip floating bar colors when footer is visible (keep transparency intact)
+  const footer = document.querySelector('.site-footer');
+  if (footer && floatingBar && 'IntersectionObserver' in window) {
+    const footerObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            floatingBar.classList.add('on-footer');
+          } else {
+            floatingBar.classList.remove('on-footer');
+          }
         });
+      },
+      { threshold: 0.01 }
+    );
+    footerObserver.observe(footer);
+  }
+
+  // 🎯 Progress Rings
+  const rings = document.querySelectorAll(".progress-ring");
+
+  rings.forEach((ring) => {
+    const percent = ring.getAttribute("data-percent");
+    const circle = ring.querySelector(".progress");
+    const radius = 50;
+    const circumference = 2 * Math.PI * radius;
+
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference;
+
+    requestAnimationFrame(() => {
+      const offset = circumference - (percent / 100) * circumference;
+      circle.style.transition = "stroke-dashoffset 1.5s ease-out";
+      circle.style.strokeDashoffset = offset;
+    });
+  });
+
+  // 🎯 Project Section Fade-Up Animation
+  const projects = document.querySelectorAll(".project-row");
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+        } else {
+          entry.target.classList.remove("show");
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+
+  projects.forEach((proj) => observer.observe(proj));
+
+
+
+  // --- Achievement Cards Fade-In on Scroll ---
+  const cards = document.querySelectorAll(".achievement-card");
+
+  const revealCards = () => {
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 100) {
+        card.classList.add("visible");
       }
-      observer.unobserve(en.target);
-    }
-  });
-}, { threshold: 0.25 });
-document.querySelectorAll('.reveal').forEach(el=> observer.observe(el));
+    });
+  };
 
-// Calm effects toggling (particles + parallax only)
-function enableCalmEffects(){
-  // Particles
-  initParticles();
-  // Parallax
-  parallaxActive = true;
-  updateParallax();
-}
-function disableCalmEffects(){
-  stopParticles();
-  // Reset parallax transforms
-  document.querySelectorAll('.parallax-bg, .parallax-fg').forEach(el=>{ el.style.transform = ''; });
-  parallaxActive = false;
-}
+  window.addEventListener("scroll", revealCards);
+  revealCards(); // Run on load
 
-// Parallax scrolling (only in Calm mode)
-let parallaxActive = body.classList.contains('calm');
-const sections = Array.from(document.querySelectorAll('section'));
-function updateParallax(){
-  if(!parallaxActive) return;
-  const vh = window.innerHeight;
-  const isMobile = window.matchMedia('(max-width: 720px)').matches;
-  sections.forEach(sec=>{
-    const rect = sec.getBoundingClientRect();
-    const bg = sec.querySelector('.parallax-bg');
-    const fg = sec.querySelector('.parallax-fg');
-    if(!bg && !fg) return;
-    const centerOffset = (rect.top + rect.height/2) - (vh/2);
-    const bgSpeed = isMobile ? 0.15 : 0.30;
-    const fgSpeed = isMobile ? 0.30 : 0.60;
-    if(bg){ bg.style.transform = `translate3d(0, ${(-centerOffset*bgSpeed).toFixed(2)}px, 0)`; }
-    if(fg){ fg.style.transform = `translate3d(0, ${(-centerOffset*fgSpeed).toFixed(2)}px, 0)`; }
-  });
-}
-window.addEventListener('scroll', ()=>{ if(parallaxActive) updateParallax(); }, { passive:true });
-window.addEventListener('resize', ()=>{ if(parallaxActive) updateParallax(); }, { passive:true });
+    const reveals = document.querySelectorAll(".reveal");
 
-// Initial overlay + loader on first load
-window.addEventListener('load', ()=>{
-  // Always show a short loader on initial load for consistency
-  if (overlayEl){ overlayEl.classList.add('show'); }
-  if (loaderEl){ loaderEl.style.display = 'grid'; }
-  if (saved === 'calm') enableCalmEffects();
-  setTimeout(()=>{
-    if (loaderEl){ loaderEl.style.display = 'none'; }
-    if (overlayEl){ overlayEl.classList.remove('show'); }
-  }, 1200);
+  const revealOnScroll = () => {
+    const triggerBottom = window.innerHeight * 0.85;
+
+    reveals.forEach((el) => {
+      const boxTop = el.getBoundingClientRect().top;
+
+      if (boxTop < triggerBottom) {
+        el.classList.add("show");
+      } else {
+        el.classList.remove("show");
+      }
+    });
+  };
+
+  window.addEventListener("scroll", revealOnScroll);
+  revealOnScroll();
+
+  // --- Mobile typewriter fallback for heading ---
+  const h1 = document.querySelector(".typewriter");
+  if (h1) {
+    const mq = window.matchMedia("(max-width: 600px)");
+    const originalText = h1.textContent;
+
+    const runTypewriter = () => {
+      // Avoid re-running
+      if (h1.dataset.typed === "1") return;
+      h1.dataset.typed = "1";
+      h1.textContent = "";
+      let i = 0;
+      const speed = 25; // ms per char for smooth mobile typing
+      const tick = () => {
+        if (i <= originalText.length) {
+          h1.textContent = originalText.slice(0, i);
+          i += 1;
+          setTimeout(tick, speed);
+        }
+      };
+      tick();
+    };
+
+    const maybeType = () => {
+      if (mq.matches) {
+        runTypewriter();
+      }
+    };
+
+    // Trigger on load and when viewport changes across breakpoint
+    maybeType();
+    mq.addEventListener ? mq.addEventListener("change", maybeType) : mq.addListener(maybeType);
+  }
+
+  // --- Skills Histogram (all viewports) ---
+  const buildSkillBars = () => {
+    const barsContainer = document.getElementById("skills-bars");
+    if (!barsContainer) return;
+
+    // Prevent duplicate builds
+    if (barsContainer.dataset.built === "1") return;
+
+    // Static skills data (user-specified)
+    const skillsData = [
+      { name: "Python", percent: 70 },
+      { name: "JavaScript", percent: 65 },
+      { name: "OpenCV", percent: 65 },
+      { name: "ffmpeg", percent: 75 },
+      { name: "MONGODB", percent: 80 },
+      { name: "SQL", percent: 78 },
+      { name: "Netlify", percent: 80 },
+      { name: "Render", percent: 80 },
+      { name: "Vercel", percent: 80 },
+      { name: "n8n", percent: 50 },
+    ];
+
+    const frag = document.createDocumentFragment();
+    skillsData.forEach(({ name, percent }) => {
+      const row = document.createElement("div");
+      row.className = "skills-bar";
+
+      const label = document.createElement("div");
+      label.className = "skills-bar-label";
+      label.textContent = name;
+
+      const track = document.createElement("div");
+      track.className = "skills-bar-track";
+
+      const fill = document.createElement("div");
+      fill.className = "skills-bar-fill";
+      fill.style.width = "0%";
+      fill.setAttribute("data-target", String(percent));
+
+      track.appendChild(fill);
+      row.appendChild(label);
+      row.appendChild(track);
+      frag.appendChild(row);
+    });
+
+    barsContainer.innerHTML = "";
+    barsContainer.appendChild(frag);
+    barsContainer.dataset.built = "1";
+
+    // Animate bars immediately after build for visibility (no scroll dependency)
+    const fills = barsContainer.querySelectorAll(".skills-bar-fill");
+    requestAnimationFrame(() => {
+      fills.forEach((el) => {
+        const target = parseInt(el.getAttribute("data-target"), 10) || 0;
+        el.style.width = `${target}%`;
+      });
+    });
+  };
+
+  buildSkillBars();
 });
-
-// Mobile hamburger menu (SVG checkbox)
-const hamburger = document.getElementById('hamburger');
-const navMenu = document.getElementById('primary-nav');
-const navCheckbox = document.getElementById('navToggle');
-function setMenu(open){
-  if(!hamburger || !navMenu) return;
-  hamburger.setAttribute('aria-expanded', String(open));
-  navMenu.classList.toggle('show', open);
-  if(navCheckbox) navCheckbox.checked = open;
-}
-if (navCheckbox && navMenu){
-  navCheckbox.addEventListener('change', ()=>{ setMenu(navCheckbox.checked); });
-}
-// Fallback: toggle on label click as well
-if (hamburger && !navCheckbox){
-  hamburger.addEventListener('click', ()=>{ const open = hamburger.getAttribute('aria-expanded') !== 'true'; setMenu(open); });
-}
-// Hide menu on link click
-if (navMenu){
-  navMenu.querySelectorAll('a[href^="#"]').forEach(link=>{
-    link.addEventListener('click', ()=> setMenu(false));
-  });
-}
-
-// Contact form submission (client-only via mailto, no backend)
-(function(){
-  const form = document.querySelector('form[name="contact"]');
-  const msgBox = document.getElementById('contactMsg');
-  const sendBtn = form ? form.querySelector('button[type="submit"]') : null;
-
-  if(!form || !msgBox) return;
-
-  function renderSuccess(message){
-    msgBox.innerHTML = `
-    <div class="success">
-      <div class="success__icon">
-        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="m12 1c-6.075 0-11 4.925-11 11s4.925 11 11 11 11-4.925 11-11-4.925-11-11-11zm4.768 9.14c.0878-.1004.1546-.21726.1966-.34383.0419-.12657.0581-.26026.0477-.39319-.0105-.13293-.0475-.26242-.1087-.38085-.0613-.11844-.1456-.22342-.2481-.30879-.1024-.08536-.2209-.14938-.3484-.18828s-.2616-.0519-.3942-.03823c-.1327.01366-.2612.05372-.3782.1178-.1169.06409-.2198.15091-.3027.25537l-4.3 5.159-2.225-2.226c-.1886-.1822-.4412-.283-.7034-.2807s-.51301.1075-.69842.2929-.29058.4362-.29285.6984c-.00228.2622.09851.5148.28067.7034l3 3c.0983.0982.2159.1748.3454.2251.1295.0502.2681.0729.4069.0665.1387-.0063.2747-.0414.3991-.1032.1244-.0617.2347-.1487.3236-.2554z" fill="#84D65A" fill-rule="evenodd"></path></svg>
-      </div>
-      <div class="success__title">${message}</div>
-      <div class="success__close" role="button" aria-label="Close alert"><svg height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z" fill="#7cc769"></path></svg></div>
-    </div>`;
-    const closer = msgBox.querySelector('.success__close');
-    if(closer) closer.addEventListener('click', ()=> msgBox.innerHTML = '');
-  }
-
-  function renderError(message){
-    msgBox.innerHTML = `
-    <div class="error">
-      <div class="error__icon">
-        <svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0a12 12 0 1012 12A12.014 12.014 0 0012 0zm1 17h-2v-2h2zm0-4h-2V7h2z" fill="#ff4d6d"/></svg>
-      </div>
-      <div class="error__title">${message}</div>
-      <div class="error__close" role="button" aria-label="Close alert"><svg height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z" fill="#ffb0bf"></path></svg></div>
-    </div>`;
-    const closer = msgBox.querySelector('.error__close');
-    if(closer) closer.addEventListener('click', ()=> msgBox.innerHTML = '');
-  }
-
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    // Collect and validate inputs
-    const name = (form.name?.value || '').trim();
-    const email = (form.email?.value || '').trim();
-    const message = (form.message?.value || '').trim();
-    if(!name || !email || !message){
-      renderError('All fields (name, email, message) are required.');
-      return;
-    }
-
-    // animate button and disable during send
-    if (sendBtn){ sendBtn.disabled = true; sendBtn.dataset.originalText = sendBtn.textContent; sendBtn.textContent = 'Sending...'; }
-
-    try{
-      const to = (form.querySelector('input[name="to_email"]')?.value || '').trim();
-      const subject = (form.querySelector('input[name="subject"]')?.value || 'New message from Portfolio').trim();
-      const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-
-      const mailto = new URL('mailto:' + encodeURIComponent(to || ''));
-      mailto.searchParams.set('subject', subject);
-      mailto.searchParams.set('body', body);
-
-      // Open default mail client
-      window.location.href = mailto.toString();
-      renderSuccess('Opening your email client to send the message...');
-      form.reset();
-    } catch(err){
-      console.error('Mailto error:', err);
-      renderError('Could not open your email client. Please send an email manually.');
-    } finally {
-      if (sendBtn){ sendBtn.disabled = false; sendBtn.textContent = sendBtn.dataset.originalText || 'Send'; }
-    }
-  });
-})();
-
