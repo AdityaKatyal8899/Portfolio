@@ -11,6 +11,7 @@
     referrerpolicy="no-referrer"
   />
   <link rel="stylesheet" href="style.css" />
+
 </head>
 <body>
 
@@ -287,11 +288,12 @@
     <div class="card">
       <span class="card__title">Contact Me</span>
       <p class="card__content">Have an opportunity or question? Drop me a message and I’ll get back soon.</p>
-      <form class="card__form" onsubmit="return false;">
-        <input placeholder="Your Name" type="text" required>
-        <input placeholder="Your Email" type="email" required>
-        <textarea placeholder="Your Message" rows="4" required></textarea>
-        <button class="sign-up" type="submit"><i class="fa-solid fa-paper-plane"></i> Send</button>
+      <form class="card__form" id="contactForm" onsubmit="return false;">
+        <input id="name" placeholder="Your Name" type="text" required>
+        <input id="email" placeholder="Your Email" type="email" required>
+        <textarea id="message" placeholder="Your Message" rows="4" required></textarea>
+        <button class="sign-up" id="sendButton" type="submit"><i class="fa-solid fa-paper-plane"></i>Send</button>
+        <div id="form-status" aria-live="polite"></div>
       </form>
     </div>
   </section>
@@ -305,10 +307,15 @@
     </div>
   </footer>
 
-  <!-- Floating Navigation -->
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function() {
+    if (window.emailjs && typeof emailjs.init === 'function') {
+      emailjs.init("R4a1S2Mo0ivAFkmsu");
+    }
+  })();
+</script>
 
-
-  <script src="script.js">
-  </script>
 </body>
 </html>

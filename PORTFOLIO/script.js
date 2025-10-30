@@ -230,4 +230,76 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   buildSkillBars();
+
+  // --- EmailJS Contact Form Integration ---
+const contactForm = document.getElementById("contactForm");
+const status = document.getElementById("form-status");
+const sendButton = document.getElementById("sendButton");
+
+if (contactForm) {
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
+
+    if (!name || !email || !message) {
+      status.textContent = "⚠️ Please fill out all fields.";
+      status.style.color = "#ff4d6d";
+      return;
+    }
+
+    const originalBtnHTML = sendButton ? sendButton.innerHTML : "";
+    if (sendButton) {
+      sendButton.disabled = true;
+      sendButton.innerText = "Sending...";
+    }
+    status.textContent = "Sending...";
+    status.style.color = "#3f8efc";
+
+    if (!window.emailjs || typeof emailjs.send !== "function") {
+      console.error("EmailJS is not available. Check script loading order or network errors.");
+      status.textContent = "Failed to Send Message.";
+      status.style.color = "red";
+      if (sendButton) {
+        sendButton.disabled = false;
+        sendButton.innerHTML = originalBtnHTML || '<i class="fa-solid fa-paper-plane"></i>Send';
+      }
+      return;
+    }
+
+    emailjs
+      .send("service_hh7woju", "template_q6klcq6", {
+        from_name: name,
+        from_email: email,
+        message: message,
+      }, "R4a1S2Mo0ivAFkmsu")
+      .then(
+        () => {
+          console.log("EmailJS: send resolved successfully");
+          status.textContent = "✅ Sent!";
+          status.style.color = "green";
+          contactForm.reset();
+          setTimeout(() => {
+            status.textContent = "";
+          }, 4000);
+          if (sendButton) {
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalBtnHTML || '<i class="fa-solid fa-paper-plane"></i>Send';
+          }
+        },
+        (error) => {
+          console.error("EmailJS Error:", error);
+          status.textContent = "❌ Failed";
+          status.style.color = "red";
+          if (sendButton) {
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalBtnHTML || '<i class="fa-solid fa-paper-plane"></i>Send';
+          }
+        }
+      );
+  });
+}
+
 });
