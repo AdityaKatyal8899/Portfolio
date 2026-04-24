@@ -1,18 +1,25 @@
 const { MongoClient } = require('mongodb');
 
-// Environment variables (Set these in Vercel/Netlify)
+// Environment variables (Set these in Vercel Dashboard)
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.DB_NAME || "portfolio";
+const dbName = process.env.DB_NAME || "UpVoteBase";
+const collectionName = "votes";
 const discordWebhook = process.env.DISCORD_WEBHOOK_URL;
 
+let cachedClient = null;
 let cachedDb = null;
 
 async function connectToDatabase() {
-  if (cachedDb) return cachedDb;
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
   const client = await MongoClient.connect(uri);
   const db = client.db(dbName);
+
+  cachedClient = client;
   cachedDb = db;
-  return db;
+  return { client, db };
 }
 
 async function sendDiscordNotification(projectId, count) {
@@ -32,6 +39,7 @@ async function sendDiscordNotification(projectId, count) {
   };
 
   try {
+    // In Vercel Node.js 18+, fetch is global.
     await fetch(discordWebhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,13 +51,11 @@ async function sendDiscordNotification(projectId, count) {
 }
 
 module.exports = async (req, res) => {
-  if (!uri) {
-    return res.status(500).json({ error: "MONGODB_URI not set" });
-  }
+  if (!uri) return res.status(500).json({ error: "MONGODB_URI not set" });
 
   try {
-    const db = await connectToDatabase();
-    const collection = db.collection('upvotes');
+    const { db } = await connectToDatabase();
+    const collection = db.collection(collectionName);
 
     if (req.method === 'GET') {
       const votes = await collection.find({}).toArray();
@@ -70,12 +76,11 @@ module.exports = async (req, res) => {
         { upsert: true, returnDocument: 'after' }
       );
 
-      const newCount = result.count;
+      // result.value might be null on upsert depending on driver, but returnDocument: 'after' should help
+      const newCount = result.count || (result.value ? result.value.count : 0);
       
-      // Trigger notification
       await sendDiscordNotification(projectId, newCount);
 
-      // Return all votes to sync UI
       const allVotes = await collection.find({}).toArray();
       const voteMap = allVotes.reduce((acc, curr) => {
         acc[curr.projectId] = curr.count;
