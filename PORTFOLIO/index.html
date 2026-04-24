@@ -17,7 +17,7 @@
 <body>
 
   <!-- Theme Toggle -->
-  <div class="theme-toggle-wrap">
+  <!-- <div class="theme-toggle-wrap">
     <!-- From Uiverse.io by andrew-demchenk0 --> 
     <label class="switch">
       <span class="sun"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#ffd43b"><circle r="5" cy="12" cx="12"></circle><path d="m21 13h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm-17 0h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm13.66-5.66a1 1 0 0 1 -.66-.29 1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.71.71a1 1 0 0 1 -.75.29zm-12.02 12.02a1 1 0 0 1 -.71-.29 1 1 0 0 1 0-1.41l.71-.66a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1 -.7.24zm6.36-14.36a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm0 17a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm-5.66-14.66a1 1 0 0 1 -.7-.29l-.71-.71a1 1 0 0 1 1.41-1.41l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.29zm12.02 12.02a1 1 0 0 1 -.7-.29l-.66-.71a1 1 0 0 1 1.36-1.36l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.24z"></path></g></svg></span>
@@ -25,11 +25,11 @@
       <input type="checkbox" class="input" aria-label="Toggle theme">
       <span class="slider"></span>
     </label>
-  </div>
+  </div> -->
 
   <!-- Intro Section -->
   <section class="intro reveal show">
-    <h1 class="typewriter">Hi, I'm Aditya — Full-Stack Developer & ML Engineer</h1>
+    <h1 class="typewriter">Hi, I'm Aditya — Full-Stack Developer & Backend Engineer</h1>
     <p class="subtitle">Building intelligent and aesthetic experiences with code.</p>
   </section>
   
@@ -38,9 +38,9 @@
     <a href="#achievements">Achievements</a>
     <a href="#skills">Skills</a>
     <a href="#projects">Projects</a>
+    <a href="#packages">Open Source</a>
     <a href="#socials">Socials</a>
     <a href="#contact">Contact</a>
-    <a href="#packages">Open Source</a>
   </div>
   <!-- About Me -->
   <section class="about reveal" id="about">
@@ -56,7 +56,6 @@
         <div class="badge"><i class="fa-solid fa-code"></i> Full Stack Development <span class="sub">(Flask, React, Next.js, FastAPI)</span></div>
         <div class="badge"><i class="fa-solid fa-brain"></i> Machine Learning & Deep Learning</div>
         <div class="badge"><i class="fa-solid fa-gears"></i> System Automation & Optimization</div>
-        <div class="badge"><i class="fa-solid fa-pen-ruler"></i> UI/UX and Design Integration</div>
       </div>
 
       <!-- Education Subsection -->
@@ -163,18 +162,22 @@
         </div>
       </div>
     </div>
-     <!-- Project 2 -->
+
+    
+    <!-- Project 2 -->
     <div class="project-row reverse reveal">
       <div class="project-image">
-        <img src="images/project2.png" alt="Fetch Flow Screenshot" />
+        <img src="images/project2.png" alt="Temp Share Screenshot" />
       </div>
       <div class="project-content">
-        <h3>Fetch Flow</h3>
-        <p>
-          A cross-platform media downloader built using Flask and React, supporting
-          YouTube, Instagram, and other popular platforms. Uses <code>yt-dlp</code> and <code>ffmpeg</code>.
+        <h3>Temp Share</h3>
+         <p>TempShare is a lightweight, secure file-sharing 
+          platform designed for temporary access. It enables 
+          users to upload files or folders, generate time-limited 
+          access and ownership codes, preview content instantly, and automatically delete files after expiry — all without accounts or permanent storage.
         </p>
-        <p class="tech-stack"><strong>Tech Stack:</strong> Flask - React - yt-dlp - ffmpeg</p>
+        <p class="tech-stack"><strong>Tech Stack:</strong> ReactJS - Flask - Cloudinary(For cloud storage support)</p>
+        
         <div class="project-links">
           <a href="https://github.com/AdityaKatyal8899/FetchFlow-Android" target="_blank" class="visit-site">
             <i class="fa-solid fa-earth-americas"></i> Visit Site
@@ -185,29 +188,30 @@
         </div>
       </div>
     </div>
+
      <!-- Project 3 -->
     <div class="project-row reveal">
       <div class="project-image">
-        <img src="images/project3.png" alt="Temp Share Screenshot" />
+        <img src="images/project3.png" alt="CoWatch Screenshot" />
       </div>
       <div class="project-content">
-        <h3>Temp Share</h3>
-        <p>TempShare is a lightweight, secure file-sharing 
-          platform designed for temporary access. It enables 
-          users to upload files or folders, generate time-limited 
-          access and ownership codes, preview content instantly, and automatically delete files after expiry — all without accounts or permanent storage.
-        </p>
-        <p class="tech-stack"><strong>Tech Stack:</strong> ReactJS - Flask - Cloudinary(For cloud storage support)</p>
+        <h3>CoWatch</h3>
+       <p>
+        Cowatch is a real-time watch-party system with WebSockets and drift-correction for synchronised playback.
+        Implemented HLS video pipeline (ffmpeg, m3u8 + TS segments) with VOD optimization and segments control.
+      </p>
+        <p class="tech-stack"><strong>Tech Stack:</strong> FastAPI - Next.js - Docker - ffmpeg - AWS(EC2, S3) - Redis - Celery - Supabase - ORM</p>
         <div class="project-links">
-          <a href="https://tempshare-ten.vercel.app/" target="_blank" class="visit-site">
+          <a href="https://co-watch-dev-env.vercel.app/" target="_blank" class="visit-site">
             <i class="fa-solid fa-earth-americas"></i> Visit Site
           </a>
-          <a href="https://github.com/AdityaKatyal8899/temp-front" target="_blank" class="repo">
+          <a href="https://github.com/AdityaKatyal8899/CoWatch-Dev-env" target="_blank" class="repo">
             <i class="fa-brands fa-github"></i> Repo
           </a>
         </div>
       </div>
     </div>
+
 
 <!-- Project 4 -->
     <div class="project-row reverse reveal">
@@ -221,7 +225,7 @@
           intelligence for accurate horoscope generation and matchmaking. It delivers seamless, data-driven celestial
           insights by integrating sophisticated domain logic into a modern web-based experience.
 
-        <p class="tech-stack"><strong>Tech Stack:</strong> FastAPI - Next.js - PostgreSQL</p>
+        <p class="tech-stack"><strong>Tech Stack:</strong> FastAPI - Next.js - PostgreSQL - ORM</p>
         <div class="project-links">
           <a href="https://kundli-web-app.vercel.app/" target="_blank" class="visit-site">
             <i class="fa-solid fa-earth-americas"></i> Visit Site
@@ -250,7 +254,7 @@
       <p>
         SeatLock is a reusable Python engine designed to handle concurrency-safe
         resource allocation using lock, book, cancel, and timeout semantics.
-        Built as a pure domain library and published to PyPI for real-world use.
+        Built as a pure domain library and published to PyPI for real-world use (500+ downloads worldwide).
       </p>
 
       <p class="tech-stack">
@@ -279,7 +283,7 @@
         mediainfo-py is a lightweight Python package that wraps FFmpeg’s
         <code>ffprobe</code> functionality to extract essential video metadata
         such as resolution, frame rate (FPS), codec, and duration using a clean,
-        Pythonic interface.
+        Pythonic interface (2000+ downloads worldwide).
       </p>
 
       <p class="tech-stack">

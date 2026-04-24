@@ -550,17 +550,13 @@ section:last-of-type {
   box-shadow: 15px 15px black;
   opacity: 0;
   transform: translateY(40px);
-  transition:
-    opacity 0.3s ease-in-out,
-    transform 0.3s ease-in-out,
-    box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .achievement-card.visible {
-  opacity: 1;
+  /* opacity: 1; */
   transform: translateY(0);
   transition:
-    opacity 0.8s ease,
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
