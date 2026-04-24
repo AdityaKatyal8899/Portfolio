@@ -1,26 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Theme toggle (Uiverse switch)
-  const rootEl = document.documentElement;
-  const toggleCheckbox = document.querySelector('.theme-toggle-wrap .input');
-  const applyTheme = (theme) => {
-    if (theme === 'dark') {
-      rootEl.classList.add('theme-dark');
-      if (toggleCheckbox) toggleCheckbox.checked = true;
-    } else {
-      rootEl.classList.remove('theme-dark');
-      if (toggleCheckbox) toggleCheckbox.checked = false;
-    }
-  };
-  const saved = localStorage.getItem('theme') || 'light';
-  applyTheme(saved);
-  if (toggleCheckbox) {
-    toggleCheckbox.addEventListener('change', (e) => {
-      const wantDark = e.currentTarget.checked;
-      const mode = wantDark ? 'dark' : 'light';
-      localStorage.setItem('theme', mode);
-      applyTheme(mode);
-    });
-  }
   // Floating bar height sync
   const floatingBar = document.querySelector(".floating-bar");
   const root = document.documentElement;
@@ -301,5 +279,93 @@ if (contactForm) {
       );
   });
 }
+
+
+  // --- UpVote System Logic ---
+  const VOTE_THRESHOLD = 20;
+  const upvoteContainers = document.querySelectorAll('.upvote-container');
+
+  const fetchVotes = async () => {
+    try {
+      const response = await fetch('/api/vote');
+      if (response.ok) {
+        const data = await response.json();
+        updateVoteUI(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch votes:", err);
+    }
+  };
+
+  const updateVoteUI = (voteData) => {
+    upvoteContainers.forEach(container => {
+      const id = container.getAttribute('data-project-id');
+      const count = voteData[id] || 0;
+      const countSpan = container.querySelector('.upvote-count');
+      const btn = container.querySelector('.upvote-btn');
+
+      if (countSpan) countSpan.textContent = count;
+      if (count >= VOTE_THRESHOLD && countSpan) {
+        countSpan.classList.add('show');
+      }
+
+      if (localStorage.getItem(`upvoted_${id}`)) {
+        btn.classList.add('active');
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'fa-solid fa-heart';
+      }
+    });
+  };
+
+  const handleUpvote = async (container) => {
+    const id = container.getAttribute('data-project-id');
+    const btn = container.querySelector('.upvote-btn');
+    const icon = btn.querySelector('i');
+    const countSpan = container.querySelector('.upvote-count');
+
+    if (localStorage.getItem(`upvoted_${id}`)) return;
+
+    localStorage.setItem(`upvoted_${id}`, 'true');
+    btn.classList.add('active');
+    if (icon) {
+      icon.className = 'fa-solid fa-heart';
+      icon.classList.add('heart-animate');
+    }
+    
+    let currentCount = parseInt(countSpan.textContent) || 0;
+    currentCount++;
+    if (countSpan) countSpan.textContent = currentCount;
+    if (currentCount >= VOTE_THRESHOLD && countSpan) {
+      countSpan.classList.add('show');
+    }
+
+    try {
+      const response = await fetch('/api/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        updateVoteUI(data);
+      }
+    } catch (err) {
+      console.error("Vote error:", err);
+    } finally {
+      if (icon) {
+        setTimeout(() => icon.classList.remove('heart-animate'), 4000);
+      }
+    }
+  };
+
+  upvoteContainers.forEach(container => {
+    container.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleUpvote(container);
+    });
+  });
+
+  fetchVotes();
 
 });

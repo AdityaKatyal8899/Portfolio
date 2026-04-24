@@ -26,77 +26,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Theme toggle button */
-.theme-toggle-wrap {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 10000;
-}
 
-/* From Uiverse.io by andrew-demchenk0 */
-.switch {
-  font-size: 17px;
-  position: relative;
-  display: inline-block;
-  width: 64px;
-  height: 34px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #73C0FC;
-  transition: .4s;
-  border-radius: 30px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 30px;
-  width: 30px;
-  border-radius: 20px;
-  left: 2px;
-  bottom: 2px;
-  z-index: 2;
-  background-color: #e8e8e8;
-  transition: .4s;
-}
-
-.sun svg {
-  position: absolute;
-  top: 6px;
-  left: 36px;
-  z-index: 1;
-  width: 24px;
-  height: 24px;
-}
-
-.moon svg {
-  fill: #73C0FC;
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  z-index: 1;
-  width: 24px;
-  height: 24px;
-}
-
-/* .switch:hover */
-.sun svg {
-  animation: rotate 15s linear infinite;
-}
 
 @keyframes rotate {
   0% {
@@ -1567,5 +1497,90 @@ textarea:focus {
 @media (max-width: 600px) {
   .site-footer {
     padding: 36px 16px 120px;
+  }
+}
+
+/* --- UpVote System --- */
+.upvote-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto; /* Push to the right */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+
+
+.upvote-container:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(255, 77, 109, 0.4);
+}
+
+.upvote-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #333;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
+
+.upvote-btn i {
+  transition: all 0.3s ease;
+}
+
+.upvote-btn.active i {
+  color: #ff4d6d;
+  font-weight: 900; /* fa-solid effect */
+}
+
+.upvote-btn:active {
+  transform: scale(1.4);
+}
+
+.upvote-count {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ff4d6d;
+  opacity: 0;
+  display: none; /* Hidden until threshold */
+  transform: translateX(-5px);
+  transition: all 0.4s ease;
+}
+
+.upvote-count.show {
+  display: inline-block;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Pop animation */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+.heart-animate {
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@media (max-width: 600px) {
+  .upvote-container {
+    margin-left: 0;
+    margin-top: 12px;
   }
 }
