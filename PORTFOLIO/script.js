@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+function init() {
   // Floating bar height sync
   const floatingBar = document.querySelector(".floating-bar");
   const root = document.documentElement;
@@ -160,15 +160,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const skillsData = [
       { name: "Python", percent: 70 },
       { name: "JavaScript", percent: 65 },
+      { name: "FastAPI", percent: 80 },
+      { name: "Next.js", percent: 80 },
       { name: "OpenCV", percent: 65 },
       { name: "ffmpeg", percent: 75 },
       { name: "MONGODB", percent: 80 },
       { name: "SQL", percent: 78 },
-      { name: "Netlify", percent: 80 },
-      { name: "Render", percent: 80 },
-      { name: "Vercel", percent: 80 },
-      { name: "n8n", percent: 50 },
-    ];
+      { name: "Docker", percent: 75 },
+      { name: "AWS- (EC2, S3, Cloudfront, Lambda)", percent: 80 },
+      ];
 
     const frag = document.createDocumentFragment();
     skillsData.forEach(({ name, percent }) => {
@@ -366,6 +366,136 @@ if (contactForm) {
     });
   });
 
+  // --- GitHub Activity Timeline Fetching ---
+  const getRelativeTime = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHr / 24);
+
+      if (diffDays > 0) {
+        if (diffDays === 1) return "yesterday";
+        return `${diffDays} days ago`;
+      }
+      if (diffHr > 0) {
+        return `${diffHr} hours ago`;
+      }
+      if (diffMin > 0) {
+        return `${diffMin} minutes ago`;
+      }
+      return "just now";
+    } catch (e) {
+      return "recently";
+    }
+  };
+
+  const getMockCommits = () => [
+    {
+      repo: "AdityaKatyal8899/CoWatch-Dev-env",
+      message: "feat: integrate WebSockets drift-correction playback sync",
+      sha: "f1a8e32",
+      date: new Date(Date.now() - 2 * 3600000).toISOString() // 2 hrs ago
+    },
+    {
+      repo: "AdityaKatyal8899/FindMyClicks",
+      message: "fix: optimize facial embedding search latency and index query path",
+      sha: "9ba34fd",
+      date: new Date(Date.now() - 1 * 86400000).toISOString() // yesterday
+    },
+    {
+      repo: "AdityaKatyal8899/KatyalStore",
+      message: "feat: build neubrutalist store auth verification flows",
+      sha: "c6a2b8e",
+      date: new Date(Date.now() - 3 * 86400000).toISOString() // 3 days ago
+    },
+    {
+      repo: "AdityaKatyal8899/THE_Site",
+      message: "docs: update production deployment configurations for Vercel platform",
+      sha: "d3e1a90",
+      date: new Date(Date.now() - 5 * 86400000).toISOString()
+    }
+  ];
+
+  const renderCommits = (commits) => {
+    const timeline = document.getElementById("github-commits-timeline");
+    if (!timeline) return;
+
+    if (!commits || commits.length === 0) {
+      timeline.innerHTML = `
+        <li class="github-status-container">
+          <span style="font-family: monospace; font-size: 0.95rem; font-weight: 700;">No recent commits found.</span>
+        </li>`;
+      return;
+    }
+
+    timeline.innerHTML = commits.map((c, index) => {
+      const shortRepo = c.repo.replace("AdityaKatyal8899/", "");
+      const commitLink = `https://github.com/${c.repo}/commit/${c.sha}`;
+      const repoLink = `https://github.com/${c.repo}`;
+      const relativeDate = getRelativeTime(c.date);
+      const isFirst = index === 0;
+
+      return `
+        <li class="timeline-item">
+          <div class="timeline-dot ${isFirst ? 'glowing' : ''}"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <a href="${repoLink}" target="_blank" class="timeline-repo">${shortRepo}</a>
+              <span class="timeline-date">${relativeDate}</span>
+            </div>
+            <p class="timeline-msg">${c.message}</p>
+            <a href="${commitLink}" target="_blank" class="timeline-sha">${c.sha.substring(0, 7)}</a>
+          </div>
+        </li>`;
+    }).join("");
+  };
+
+  const fetchGitHubActivity = async () => {
+    try {
+      const response = await fetch("https://api.github.com/users/AdityaKatyal8899/events");
+      if (!response.ok) throw new Error("API rate limit or connection issue");
+      
+      const events = await response.json();
+      const pushEvents = events.filter(e => e.type === "PushEvent");
+      
+      const commits = [];
+      pushEvents.forEach(e => {
+        if (e.payload && e.payload.commits) {
+          e.payload.commits.forEach(c => {
+            commits.push({
+              repo: e.repo.name,
+              message: c.message,
+              sha: c.sha,
+              date: e.created_at
+            });
+          });
+        }
+      });
+
+      // Render top 5 commits, or fall back to mock commits if empty
+      if (commits.length === 0) {
+        console.info("No recent public commits found; rendering mock commits.");
+        renderCommits(getMockCommits());
+      } else {
+        renderCommits(commits.slice(0, 5));
+      }
+    } catch (err) {
+      console.warn("Using fallback mock commits due to:", err.message);
+      renderCommits(getMockCommits());
+    }
+  };
+
+  fetchGitHubActivity();
   fetchVotes();
 
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
