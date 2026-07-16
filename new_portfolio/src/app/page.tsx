@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ProjectCard from "./components/ProjectCard";
+import GitHubChart from "./components/GitHubChart";
 
 export default function HomePage() {
   useEffect(() => {
@@ -59,6 +60,13 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <div className="section-divider reveal show"></div>
+
+      {/* 📊 GitHub Contributions Chart */}
+      <section className="reveal show" style={{ display: "flex", justifyContent: "center", width: "100%", maxWidth: "900px", margin: "0 auto 30px auto" }}>
+        <GitHubChart />
       </section>
 
       <div className="section-divider reveal show"></div>
