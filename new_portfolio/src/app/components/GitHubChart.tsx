@@ -64,9 +64,28 @@ export default function GitHubChart() {
         if (pushEvent) {
           const repoName = pushEvent.repo.name.replace("AdityaKatyal8899/", "");
           const commits = pushEvent.payload.commits || [];
-          const commitCount = commits.length;
-          const latestCommitMessage = commits[0]?.message || "No commit message";
+          const commitCount = pushEvent.payload.size || commits.length || 1;
+          let latestCommitMessage = commits[0]?.message || "";
           const relativeTime = getRelativeTime(pushEvent.created_at);
+
+          // If payload commits are omitted (common in larger sync events), fetch details of the head commit
+          if (!latestCommitMessage && pushEvent.payload.head) {
+            try {
+              const commitRes = await fetch(
+                `https://api.github.com/repos/AdityaKatyal8899/${repoName}/commits/${pushEvent.payload.head}`
+              );
+              if (commitRes.ok) {
+                const commitData = await commitRes.json();
+                latestCommitMessage = commitData.commit?.message || "No commit message";
+              }
+            } catch (err) {
+              console.error("Failed to fetch detailed commit info:", err);
+            }
+          }
+
+          if (!latestCommitMessage) {
+            latestCommitMessage = "Pushed changes";
+          }
 
           setLatestActivity({
             repoName,
