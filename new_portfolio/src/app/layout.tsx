@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   title: "Aditya | Backend Engineer and Developer",
   description: "Building intelligent and aesthetic experiences with code.",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: "/images/favicon.png",
+    shortcut: "/images/favicon.png",
+    apple: "/images/favicon.png",
   },
 };
 
