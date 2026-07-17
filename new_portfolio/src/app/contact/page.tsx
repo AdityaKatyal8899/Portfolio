@@ -46,21 +46,23 @@ export default function ContactPage() {
     setStatusColor("#3f8efc");
 
     try {
-      const emailjs = (window as any).emailjs;
-      if (!emailjs || typeof emailjs.send !== "function") {
-        throw new Error("EmailJS SDK is not available.");
-      }
-
-      await emailjs.send(
-        "service_hh7woju",
-        "template_q6klcq6",
-        {
-          from_name: trimmedName,
-          from_email: trimmedEmail,
-          message: trimmedMessage,
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        "R4a1S2Mo0ivAFkmsu"
-      );
+        body: JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+          message: trimmedMessage,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send email");
+      }
 
       setFormStatus("✅ Sent!");
       setStatusColor("green");
@@ -68,8 +70,8 @@ export default function ContactPage() {
       setEmail("");
       setMessage("");
       setTimeout(() => setFormStatus(""), 4000);
-    } catch (err) {
-      console.error("EmailJS Error:", err);
+    } catch (err: any) {
+      console.error("Contact Form SMTP Error:", err);
       setFormStatus("❌ Failed to send");
       setStatusColor("red");
     } finally {
@@ -244,18 +246,6 @@ export default function ContactPage() {
           </form>
         </div>
       </section>
-
-      {/* Dynamic EmailJS Loader */}
-      <script
-        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
-        async
-        onLoad={() => {
-          const emailjs = (window as any).emailjs;
-          if (emailjs && typeof emailjs.init === "function") {
-            emailjs.init("R4a1S2Mo0ivAFkmsu");
-          }
-        }}
-      />
     </div>
   );
 }

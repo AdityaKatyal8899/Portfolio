@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { GitHubCalendar } from "react-github-calendar";
-
-interface Commit {
-  message: string;
-  sha: string;
-}
+import { ActivityCalendar } from "react-activity-calendar";
 
 interface PushEventData {
   repoName: string;
   commitCount: number;
   latestCommitMessage: string;
   relativeTime: string;
+}
+
+interface CalendarDay {
+  date: string;
+  count: number;
+  level: number;
 }
 
 function getRelativeTime(dateString: string): string {
@@ -33,6 +34,9 @@ export default function GitHubChart() {
   const [mounted, setMounted] = useState(false);
   const [blockSize, setBlockSize] = useState(10);
   const [latestActivity, setLatestActivity] = useState<PushEventData | null>(null);
+  const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
+  const [totalContributions, setTotalContributions] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -52,14 +56,13 @@ export default function GitHubChart() {
   }, []);
 
   useEffect(() => {
-    // Fetch live activity from GitHub
+    // Fetch live activity from GitHub events
     const fetchLiveActivity = async () => {
       try {
         const res = await fetch("https://api.github.com/users/AdityaKatyal8899/events");
         if (!res.ok) return;
         const events = await res.json();
         
-        // Find the first PushEvent
         const pushEvent = events.find((e: any) => e.type === "PushEvent");
         if (pushEvent) {
           const repoName = pushEvent.repo.name.replace("AdityaKatyal8899/", "");
@@ -68,7 +71,6 @@ export default function GitHubChart() {
           let latestCommitMessage = commits[0]?.message || "";
           const relativeTime = getRelativeTime(pushEvent.created_at);
 
-          // If payload commits are omitted (common in larger sync events), fetch details of the head commit
           if (!latestCommitMessage && pushEvent.payload.head) {
             try {
               const commitRes = await fetch(
@@ -99,10 +101,42 @@ export default function GitHubChart() {
       }
     };
 
+    // Fetch calendar data from Deno API (real-time/short cache)
+    const fetchCalendar = async () => {
+      try {
+        const res = await fetch("https://github-contributions-api.deno.dev/AdityaKatyal8899.json");
+        if (!res.ok) throw new Error("Failed to fetch calendar data");
+        const data = await res.json();
+
+        // Map Deno API level strings to react-activity-calendar level numbers
+        const mappedData = data.contributions.flat().map((day: any) => {
+          let levelVal = 0;
+          if (day.contributionLevel === "FIRST_QUARTILE") levelVal = 1;
+          else if (day.contributionLevel === "SECOND_QUARTILE") levelVal = 2;
+          else if (day.contributionLevel === "THIRD_QUARTILE") levelVal = 3;
+          else if (day.contributionLevel === "FOURTH_QUARTILE") levelVal = 4;
+
+          return {
+            date: day.date,
+            count: day.contributionCount,
+            level: levelVal,
+          };
+        });
+
+        setCalendarData(mappedData);
+        setTotalContributions(data.totalContributions || null);
+      } catch (err) {
+        console.error("Failed to fetch GitHub calendar contributions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchLiveActivity();
+    fetchCalendar();
   }, []);
 
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
       <div className="github-chart-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", margin: "0 auto 40px auto", padding: "40px", backgroundColor: "#ffffff", border: "2px solid #000000", borderRadius: "6px", boxShadow: "3px 3px 0px #000000", minHeight: "280px" }}>
         <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "20px", textTransform: "uppercase", letterSpacing: "0.5px" }}>GitHub Contributions</h3>
@@ -115,13 +149,16 @@ export default function GitHubChart() {
     <div className="github-chart-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", margin: "0 auto 40px auto", padding: "40px", backgroundColor: "#ffffff", border: "2px solid #000000", borderRadius: "6px", boxShadow: "3px 3px 0px #000000" }}>
       <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "20px", textTransform: "uppercase", letterSpacing: "0.5px" }}>GitHub Contributions</h3>
       
-      <div className="calendar-wrapper" style={{ width: "100%", display: "flex", justifyContent: "center", overflowX: "auto" }}>
-        <GitHubCalendar
+      <div className="calendar-wrapper" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflowX: "auto" }}>
+        <ActivityCalendar
+          data={calendarData}
           theme={{
-            light: ['#f0f4f8', '#d0e1f9', '#4d648d', '#2a4d69', '#1e3d59'],
+            light: ['#ebedf0', '#77b0e9ff', '#2581ddff', '#0c64b5ff', '#0c559aff'],
             dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
           }}
-          username="AdityaKatyal8899"
+          labels={{
+            totalCount: "{{count}} contributions in the last year",
+          }}
           blockSize={blockSize}
           blockMargin={5}
           colorScheme="light"
