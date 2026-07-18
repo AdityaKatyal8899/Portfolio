@@ -95,6 +95,11 @@ export default function KeyboardNav() {
           break;
         case "t":
           e.preventDefault();
+          window.dispatchEvent(new CustomEvent("toggleTheme"));
+          if (isModalOpen) setIsModalOpen(false);
+          break;
+        case "g":
+          e.preventDefault();
           router.push("/past-projects");
           if (isModalOpen) setIsModalOpen(false);
           break;
@@ -162,7 +167,10 @@ export default function KeyboardNav() {
                 <kbd>P</kbd> <span>Projects</span>
               </div>
               <div className="shortcut-row">
-                <kbd>T</kbd> <span>Past Projects</span>
+                <kbd>T</kbd> <span>Toggle Theme</span>
+              </div>
+              <div className="shortcut-row">
+                <kbd>G</kbd> <span>Past Projects</span>
               </div>
               <div className="shortcut-row">
                 <kbd>O</kbd> <span>Open Source</span>

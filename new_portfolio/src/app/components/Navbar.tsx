@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnimatedThemeToggler } from "./AnimatedThemeToggler";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -33,7 +34,12 @@ export default function Navbar() {
 
   return (
     <header className="site-header">
-      <nav className="nav-container" style={{ justifyContent: "flex-end" }}>
+      <nav className="nav-container" style={{ justifyContent: "flex-end", alignItems: "center", gap: "16px" }}>
+        
+        {/* Theme Toggler */}
+        <div className={heroFinished ? "show-nav" : "hide-nav"} style={{ display: "flex", alignItems: "center" }}>
+          <AnimatedThemeToggler />
+        </div>
 
         {/* Hamburger Button for Mobile */}
         <button

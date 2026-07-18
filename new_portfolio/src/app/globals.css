@@ -1433,13 +1433,13 @@ textarea:focus {
   background: #fff;
   border-radius: 14px;
   padding: 12px 16px;
-  box-shadow: 15px 15px black;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 4px 4px 0px #000000;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .education-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 5px 5px 5px;
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
 }
 
 .edu-left {
@@ -2437,4 +2437,20 @@ textarea:focus {
     border-top: 1px dashed #cccccc;
     padding-top: 10px;
   }
+}
+
+/* View Transition API animations customization for theme toggler */
+::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration, 400ms);
+}
+
+[data-magicui-theme-vt="active"]::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+[data-magicui-theme-vt="active"]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  clip-path: var(--magicui-theme-vt-clip-from);
 }
