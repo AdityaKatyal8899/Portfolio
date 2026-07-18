@@ -1,12 +1,27 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import ExpandableProjectCard from "../components/ExpandableProjectCard";
+
+interface ProjectData {
+  id: string;
+  name: string;
+  shortDescription: string;
+  techStack: string[];
+  externalLink: string;
+  githubLink: string;
+  status: {
+    type: "live" | "dev" | "archived";
+    label: string;
+  };
+  expandedContent: {
+    whatIsIt: string;
+    whyBuildIt: string;
+  };
+}
 
 export default function PastProjectsPage() {
-  const [votes, setVotes] = useState<Record<string, number>>({});
-  const [upvotedProjects, setUpvotedProjects] = useState<Record<string, boolean>>({});
-
-  const pastProjectIds = ["findmyclicks", "the-site"];
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     // Scroll reveal observer
@@ -27,116 +42,71 @@ export default function PastProjectsPage() {
     return () => revealObserver.disconnect();
   }, []);
 
-  // Fetch votes & sync localStorage on mount
+  // Listen for Escape key globally to collapse any expanded card
   useEffect(() => {
-    const fetchVotes = async () => {
-      try {
-        const response = await fetch("/api/vote");
-        if (response.ok) {
-          const data = await response.json();
-          setVotes(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch votes:", err);
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setExpandedId(null);
       }
     };
-    fetchVotes();
-
-    const localUpvoted: Record<string, boolean> = {};
-    pastProjectIds.forEach((id) => {
-      if (localStorage.getItem(`upvoted_${id}`)) {
-        localUpvoted[id] = true;
-      }
-    });
-    setUpvotedProjects(localUpvoted);
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, []);
 
-  const handleUpvote = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (upvotedProjects[id]) return;
-
-    localStorage.setItem(`upvoted_${id}`, "true");
-    setUpvotedProjects((prev) => ({ ...prev, [id]: true }));
-
-    // Optimistically update locally
-    setVotes((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-
-    try {
-      const response = await fetch("/api/vote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: id })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setVotes(data);
+  const pastProjects: ProjectData[] = [
+    {
+      id: "findmyclicks",
+      name: "FindMyClicks (FMC)",
+      shortDescription: "An intelligent face embedding matching and finder platform that searches large volumes of images.",
+      techStack: ["Python", "FastAPI", "Face Recognition", "Dlib", "JavaScript", "CSS"],
+      externalLink: "https://findmyclicks.vercel.app",
+      githubLink: "https://github.com/AdityaKatyal8899/FindMyClicks",
+      status: { type: "archived", label: "Archived" },
+      expandedContent: {
+        whatIsIt: "FindMyClicks (FMC) is a face embedding search engine. It processes reference face samples and scans massive sets of pictures to identify occurrences of that specific face in seconds, eliminating manual file reviews.",
+        whyBuildIt: "I built this to explore computer vision libraries and automated facial detection workflows. I wanted to understand face coordinate mapping, spatial facial landmarks, and search optimizations over local file directories."
       }
-    } catch (err) {
-      console.error("Vote error:", err);
+    },
+    {
+      id: "the-site",
+      name: "THE Language Official Site",
+      shortDescription: "The official download, documentation, and support site for THE programming language.",
+      techStack: ["Next.js", "TypeScript", "TailwindCSS", "Vercel"],
+      externalLink: "https://the-lang-official.vercel.app/",
+      githubLink: "https://github.com/AdityaKatyal8899/THE_Site",
+      status: { type: "archived", label: "Archived" },
+      expandedContent: {
+        whatIsIt: "THE Language Official Site is the documentation and distribution hub for THE programming language. It hosts language references, syntax tutorials, binary compiler releases, and links to community discussions.",
+        whyBuildIt: "I built this page to support my custom compiler release and make downloading compiler binaries straightforward. It allowed me to design a structured reference documentation page for new users of the language."
+      }
     }
+  ];
+
+  const handleToggle = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   return (
     <div className="page-container">
-      <section className="projects reveal show" id="past-projects">
-        <h2 className="section-title">Past Projects</h2>
-
-        {/* FindMyClicks */}
-        <div className="project-row reveal show">
-          <div className="project-image">
-            <img src="/images/past1.png" alt="FindMyClicks Screenshot" />
-          </div>
-          <div className="project-content">
-            <h3>FindMyClicks (FMC)</h3>
-            <p>
-              FindMyClicks (FMC) is an intelligent face embedding matching and face finder that searches a large volume of images.
-              It eliminates the need to manually search through files, finding target faces in seconds.
-            </p>
-            <p className="tech-stack"><strong>Tech Stack:</strong> Python - FastAPI - Face Recognition (Dlib) - JavaScript - CSS</p>
-            <div className="project-links">
-              <a href="https://findmyclicks.vercel.app" target="_blank" rel="noopener noreferrer" className="visit-site">
-                <i className="fa-solid fa-earth-americas"></i> Visit Site
-              </a>
-              <a href="https://github.com/AdityaKatyal8899/FindMyClicks" target="_blank" rel="noopener noreferrer" className="repo">
-                <i className="fa-brands fa-github"></i> Repo
-              </a>
-              <div className="upvote-container" onClick={(e) => handleUpvote("findmyclicks", e)}>
-                <button className={`upvote-btn ${upvotedProjects["findmyclicks"] ? "active" : ""}`} aria-label="Upvote project">
-                  <i className={upvotedProjects["findmyclicks"] ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
-                </button>
-                <span className={`upvote-count ${(votes["findmyclicks"] || 0) >= 20 ? "show" : ""}`}>{votes["findmyclicks"] || 0}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* THE Language Official Site */}
-        <div className="project-row reverse reveal show">
-          <div className="project-image">
-            <img src="/images/past2.png" alt="THE_Site Screenshot" />
-          </div>
-          <div className="project-content">
-            <h3>THE Language Official Site</h3>
-            <p>
-              The official download, documentation, and support site for THE programming language.
-              Enables downloading official binaries, exploring compiler documentation, and connecting with the community.
-            </p>
-            <p className="tech-stack"><strong>Tech Stack:</strong> Next.js - TypeScript - TailwindCSS - Vercel</p>
-            <div className="project-links">
-              <a href="https://the-lang-official.vercel.app/" target="_blank" rel="noopener noreferrer" className="visit-site">
-                <i className="fa-solid fa-earth-americas"></i> Visit Site
-              </a>
-              <a href="https://github.com/AdityaKatyal8899/THE_Site" target="_blank" rel="noopener noreferrer" className="repo">
-                <i className="fa-brands fa-github"></i> Repo
-              </a>
-              <div className="upvote-container" onClick={(e) => handleUpvote("the-site", e)}>
-                <button className={`upvote-btn ${upvotedProjects["the-site"] ? "active" : ""}`} aria-label="Upvote project">
-                  <i className={upvotedProjects["the-site"] ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
-                </button>
-                <span className={`upvote-count ${(votes["the-site"] || 0) >= 20 ? "show" : ""}`}>{votes["the-site"] || 0}</span>
-              </div>
-            </div>
-          </div>
+      <section className="projects reveal show" id="past-projects" style={{ maxWidth: "900px", margin: "0 auto", width: "100%" }}>
+        <h2 className="section-title" style={{ marginBottom: "60px" }}>Past Projects</h2>
+        
+        <div className="project-explorer-list" role="tablist" aria-label="Past Projects Accordion Explorer">
+          {pastProjects.map((project) => (
+            <ExpandableProjectCard
+              key={project.id}
+              id={project.id}
+              name={project.name}
+              shortDescription={project.shortDescription}
+              techStack={project.techStack}
+              externalLink={project.externalLink}
+              githubLink={project.githubLink}
+              status={project.status}
+              expandedContent={project.expandedContent}
+              isExpanded={expandedId === project.id}
+              onToggle={() => handleToggle(project.id)}
+            />
+          ))}
         </div>
       </section>
     </div>

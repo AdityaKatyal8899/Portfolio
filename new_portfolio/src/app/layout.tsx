@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import KeyboardNav from "./components/KeyboardNav";
 import Navbar from "./components/Navbar";
+import DocPageNavigation from "./components/DocPageNavigation";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
         
         <main className="main-content">
           {children}
+          <DocPageNavigation />
         </main>
         
         <footer className="site-footer">
