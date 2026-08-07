@@ -34,7 +34,12 @@ export default function GitHubChart() {
   const [mounted, setMounted] = useState(false);
   const [blockSize, setBlockSize] = useState(10);
   const [latestActivity, setLatestActivity] = useState<PushEventData | null>(null);
+  
+  // Contributions states
+  const [allContributions, setAllContributions] = useState<CalendarDay[]>([]);
   const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("lastYear");
   const [totalContributions, setTotalContributions] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +60,7 @@ export default function GitHubChart() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Fetch data on mount
   useEffect(() => {
     // Fetch live activity from GitHub events
     const fetchLiveActivity = async () => {
@@ -101,30 +107,25 @@ export default function GitHubChart() {
       }
     };
 
-    // Fetch calendar data from Deno API (real-time/short cache)
+    // Fetch calendar data from Jogruber API
     const fetchCalendar = async () => {
       try {
-        const res = await fetch("https://github-contributions-api.deno.dev/AdityaKatyal8899.json");
+        const res = await fetch("https://github-contributions-api.jogruber.de/v4/AdityaKatyal8899");
         if (!res.ok) throw new Error("Failed to fetch calendar data");
         const data = await res.json();
 
-        // Map Deno API level strings to react-activity-calendar level numbers
-        const mappedData = data.contributions.flat().map((day: any) => {
-          let levelVal = 0;
-          if (day.contributionLevel === "FIRST_QUARTILE") levelVal = 1;
-          else if (day.contributionLevel === "SECOND_QUARTILE") levelVal = 2;
-          else if (day.contributionLevel === "THIRD_QUARTILE") levelVal = 3;
-          else if (day.contributionLevel === "FOURTH_QUARTILE") levelVal = 4;
+        // 1. Sort contributions chronologically
+        const sortedContributions = (data.contributions || []).sort((a: any, b: any) => 
+          a.date.localeCompare(b.date)
+        );
 
-          return {
-            date: day.date,
-            count: day.contributionCount,
-            level: levelVal,
-          };
-        });
+        setAllContributions(sortedContributions);
 
-        setCalendarData(mappedData);
-        setTotalContributions(data.totalContributions || null);
+        // 2. Extract unique years in reverse order (e.g. 2026, 2025)
+        const years = Array.from(
+          new Set(sortedContributions.map((day: any) => day.date.split("-")[0]))
+        ).reverse();
+        setAvailableYears(years as string[]);
       } catch (err) {
         console.error("Failed to fetch GitHub calendar contributions:", err);
       } finally {
@@ -136,6 +137,33 @@ export default function GitHubChart() {
     fetchCalendar();
   }, []);
 
+  // Filter contributions when selectedYear or allContributions change
+  useEffect(() => {
+    if (allContributions.length === 0) return;
+
+    if (selectedYear === "lastYear") {
+      // Filter out future pre-generated dates and slice the last 365 days
+      const todayStr = new Date().toISOString().split("T")[0];
+      const pastAndPresentContributions = allContributions.filter((day) => 
+        day.date <= todayStr
+      );
+      const sliced = pastAndPresentContributions.slice(-365);
+      
+      setCalendarData(sliced);
+      const total = sliced.reduce((sum, day) => sum + day.count, 0);
+      setTotalContributions(total);
+    } else {
+      // Filter by calendar year
+      const filtered = allContributions.filter((day) => 
+        day.date.startsWith(`${selectedYear}-`)
+      );
+      
+      setCalendarData(filtered);
+      const total = filtered.reduce((sum, day) => sum + day.count, 0);
+      setTotalContributions(total);
+    }
+  }, [selectedYear, allContributions]);
+
   if (!mounted || loading) {
     return (
       <div className="github-chart-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", margin: "0 auto 40px auto", padding: "40px", backgroundColor: "#ffffff", border: "2px solid #000000", borderRadius: "6px", boxShadow: "3px 3px 0px #000000", minHeight: "280px" }}>
@@ -145,24 +173,80 @@ export default function GitHubChart() {
     );
   }
 
+  // Label configuration based on selection
+  const labelTotalText = selectedYear === "lastYear" 
+    ? `${totalContributions?.toLocaleString()} contributions in the last year`
+    : `${totalContributions?.toLocaleString()} contributions in ${selectedYear}`;
+
   return (
     <div className="github-chart-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", margin: "0 auto 40px auto", padding: "40px", backgroundColor: "#ffffff", border: "2px solid #000000", borderRadius: "6px", boxShadow: "3px 3px 0px #000000" }}>
       <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "20px", textTransform: "uppercase", letterSpacing: "0.5px" }}>GitHub Contributions</h3>
       
+      {/* Neubrutalist Year Switcher */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px", justifyContent: "center", width: "100%" }}>
+        <button
+          onClick={() => setSelectedYear("lastYear")}
+          style={{
+            padding: "6px 12px",
+            fontSize: "0.8rem",
+            fontWeight: 700,
+            backgroundColor: selectedYear === "lastYear" ? "#000000" : "#ffffff",
+            color: selectedYear === "lastYear" ? "#ffffff" : "#000000",
+            border: "2px solid #000000",
+            borderRadius: "4px",
+            boxShadow: selectedYear === "lastYear" ? "none" : "2px 2px 0px #000000",
+            cursor: "pointer",
+            transform: selectedYear === "lastYear" ? "translate(1px, 1px)" : "none",
+            transition: "all 0.1s ease",
+            outline: "none"
+          }}
+        >
+          Last 12 Months
+        </button>
+        {availableYears.map((year) => (
+          <button
+            key={year}
+            onClick={() => setSelectedYear(year)}
+            style={{
+              padding: "6px 12px",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              backgroundColor: selectedYear === year ? "#000000" : "#ffffff",
+              color: selectedYear === year ? "#ffffff" : "#000000",
+              border: "2px solid #000000",
+              borderRadius: "4px",
+              boxShadow: selectedYear === year ? "none" : "2px 2px 0px #000000",
+              cursor: "pointer",
+              transform: selectedYear === year ? "translate(1px, 1px)" : "none",
+              transition: "all 0.1s ease",
+              outline: "none"
+            }}
+          >
+            {year}
+          </button>
+        ))}
+      </div>
+
       <div className="calendar-wrapper" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", overflowX: "auto" }}>
-        <ActivityCalendar
-          data={calendarData}
-          theme={{
-            light: ['#ebedf0', '#77b0e9ff', '#2581ddff', '#0c64b5ff', '#0c559aff'],
-            dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
-          }}
-          labels={{
-            totalCount: "{{count}} contributions in the last year",
-          }}
-          blockSize={blockSize}
-          blockMargin={5}
-          colorScheme="light"
-        />
+        {calendarData.length > 0 ? (
+          <ActivityCalendar
+            data={calendarData}
+            theme={{
+              light: ['#ebedf0', '#77b0e9ff', '#2581ddff', '#0c64b5ff', '#0c559aff'],
+              dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
+            }}
+            labels={{
+              totalCount: labelTotalText,
+            }}
+            blockSize={blockSize}
+            blockMargin={5}
+            colorScheme="light"
+          />
+        ) : (
+          <div style={{ color: "#64748b", fontSize: "0.95rem", padding: "20px", textAlign: "center" }}>
+            Unable to load contributions grid. Please check your connection or view directly on <a href="https://github.com/AdityaKatyal8899" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline", color: "#3f8efc" }}>GitHub</a>.
+          </div>
+        )}
       </div>
 
       {latestActivity && (

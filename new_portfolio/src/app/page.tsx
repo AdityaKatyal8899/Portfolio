@@ -64,12 +64,12 @@ export default function HomePage() {
 
       <div className="section-divider reveal show"></div>
 
-      {/* 📊 GitHub Contributions Chart
+      {/* 📊 GitHub Contributions Chart */}
       <section className="reveal show" style={{ display: "flex", justifyContent: "center", width: "100%", maxWidth: "900px", margin: "0 auto 30px auto" }}>
         <GitHubChart />
-      </section> */}
+      </section>
 
-      {/* <div className="section-divider reveal show"></div> */}
+      <div className="section-divider reveal show"></div>
 
       {/* 🎓 Education */}
       <section className="about reveal show" id="education-summary">
